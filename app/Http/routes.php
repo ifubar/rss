@@ -18,3 +18,7 @@ Route::get('/feed2', function() {
 
     return response($xml->asXML())->header('Content-Type', 'text/xml');
 });
+
+
+Route::get('/feeder', 'FeedController@show');
+

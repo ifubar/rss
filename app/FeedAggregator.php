@@ -1,12 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
 
-class Rss2Controller extends Controller
+namespace App;
+
+
+class FeedAggregator
 {
+    protected $urls;
+
     protected $items = [];
+
     protected $xmlns = [];
-    protected $feed;
+
     //RSS 2.0  to  Atom 1.0
     protected $mapper = [
         'channel' => 'feed',
@@ -19,39 +24,43 @@ class Rss2Controller extends Controller
         'managingEditor' => 'author',
         'pubDate' => 'published',
     ];
-    public function show()
+
+
+    public function __construct(array $urls)
     {
-        $feeds = array(
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCqFzWxSCi39LnW1JKFR3efg',
-            'http://atwar.blogs.nytimes.com/feed/',
-            'http://feeds.soundcloud.com/users/soundcloud:users:209936547/sounds.rss',
-        );
-        foreach ($feeds as $feed) {
-            $xml = simplexml_load_file($feed);//, 'SimpleXMLElement', LIBXML_NOCDATA);
-            $this->children($xml);
-            $this->parseNs($xml);
-        }
+        $this->urls = $urls;
+        $this->parseFeeds();
+    }
+
+    public function getXmlns()
+    {
+        return $this->xmlns;
+    }
+
+    public function getItems()
+    {
         $items = $this->items;
-        $xmlns = $this->xmlns;
-
-
         usort($items, function ($x, $y) {
             return strtotime($y['pubDate']) - strtotime($x['pubDate']);
         });
 
-
-
-        return response()->view('rss2', compact(['items', 'xmlns']))->header('Content-Type', 'text/xml');
-// Sort feed entries by pubDate (ascending)
-//        usort($entries, function ($x, $y) {
-//            return strtotime($x->pubDate) - strtotime($y->pubDate);
-//        });
-//
-//        echo "<pre>";
-//        print_r($entries);
-//        echo "</pre>";
-//        die();
+        return $items;
     }
+
+    protected function parseFeeds()
+    {
+        foreach ($this->urls as $feed) {
+            try {
+                $xml = simplexml_load_file($feed);//, 'SimpleXMLElement', LIBXML_NOCDATA);
+                $this->children($xml);
+                $this->parseNs($xml);
+            } catch (\Exception $e) {
+                //
+            }
+        }
+
+    }
+
     protected function children(\SimpleXMLElement $xml) {
         foreach($xml->children() as $k => $v) {
             if (in_array($k, ['entry', 'item'])) {
@@ -66,11 +75,8 @@ class Rss2Controller extends Controller
     }
     protected function addItem(\SimpleXMLElement $xml) {
         $namespaces = ($xml->getNamespaces(true));
-//        $namespaces = array_keys($xml->getNamespaces(true));
         $entry = new \SimpleXMLElement('<entry/>');
 
-//        echo $xml->asXML();die();
-//        var_dump($namespaces);die();
         if (empty($namespaces[""])) {
             $namespaces[""] = 'http://www.w3.org/2005/Atom';
         }
@@ -92,16 +98,13 @@ class Rss2Controller extends Controller
                         $nk->addChild($subKey, $subVal);
                     }
 
-                    $this->sxml_append($entry, $nk);
+                    $this->sxmlAppend($entry, $nk);
                     continue;
                 }
 
-                $this->sxml_append($entry, $v);
+                $this->sxmlAppend($entry, $v);
             };
         }
-//        echo $entry->asXML();
-//        die();
-
 
         $domxml = dom_import_simplexml($entry);
         array_push($this->items, [
@@ -109,6 +112,7 @@ class Rss2Controller extends Controller
             'pubDate' => (string) $entry->published,
         ]);
     }
+
     protected function parseNs(\SimpleXMLElement $xml) {
         $out = [];
         foreach ($xml->getNamespaces(true) as $k => $ns) {
@@ -119,9 +123,10 @@ class Rss2Controller extends Controller
         $this->xmlns = array_collapse([$this->xmlns, $out]);
     }
 
-    protected function sxml_append(\SimpleXMLElement $to, \SimpleXMLElement $from) {
+    protected function sxmlAppend(\SimpleXMLElement $to, \SimpleXMLElement $from) {
         $toDom = dom_import_simplexml($to);
         $fromDom = dom_import_simplexml($from);
         $toDom->appendChild($toDom->ownerDocument->importNode($fromDom, true));
     }
+
 }

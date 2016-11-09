@@ -11,44 +11,10 @@
 |
 */
 
-Route::get('/', function () {
+Route::get('/feed', 'Rss2Controller@show');
+Route::get('/feed2', function() {
+    $xml = simplexml_load_file('http://atwar.blogs.nytimes.com/feed/');
+    //echo $xml->asXML();
 
-
-
-    $feeds = array(
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCqFzWxSCi39LnW1JKFR3efg',
-//        'http://atwar.blogs.nytimes.com/feed/',
-        // etc.
-    );
-
-// Get all feed entries
-    $entries = array();
-    foreach ($feeds as $feed) {
-        $xml = simplexml_load_file($feed);
-//        $entries = array_merge($entries, $xml->xpath('/rss//item'));
-        foreach ($xml->children() as $prop => $items) {
-            if ($prop == 'entry') {
-                var_dump($items);
-            }
-
-        }
-//        var_dump($xml->children());die();
-//        var_dump($xml->xpath('/feed/entry'));
-        die();
-        $entries = array_merge($entries, $xml->children('entry'));
-    }
-
-// Sort feed entries by pubDate (ascending)
-    usort($entries, function ($x, $y) {
-        return strtotime($x->pubDate) - strtotime($y->pubDate);
-    });
-
-    echo "<pre>";
-    print_r($entries);
-    echo "</pre>";
-    die();
-
-
-
-    //return view('welcome');
+    return response($xml->asXML())->header('Content-Type', 'text/xml');
 });

@@ -51,7 +51,12 @@ class FeedAggregator
     {
         foreach ($this->urls as $feed) {
             try {
-                $xml = simplexml_load_file($feed);//, 'SimpleXMLElement', LIBXML_NOCDATA);
+                $ch = \curl_init();
+                curl_setopt($ch, CURLOPT_URL, $feed);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $output = curl_exec($ch);
+                curl_close($ch);
+                $xml = simplexml_load_string($output);
                 $this->children($xml);
                 $this->parseNs($xml);
             } catch (\Exception $e) {

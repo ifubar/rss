@@ -11,7 +11,7 @@
 |
 */
 
-Route::get('/feed', 'Rss2Controller@show');
+Route::get('/feed', 'FeedController@show');
 Route::get('/feed2', function() {
     $xml = simplexml_load_file('http://atwar.blogs.nytimes.com/feed/');
     //echo $xml->asXML();

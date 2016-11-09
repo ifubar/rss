@@ -10,9 +10,13 @@ class FeedController extends Controller
     {
 
         $feed = new FeedAggregator([
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCqFzWxSCi39LnW1JKFR3efg',
-            'http://atwar.blogs.nytimes.com/feed/',
-            'http://feeds.soundcloud.com/users/soundcloud:users:209936547/sounds.rss',
+//            'https://www.youtube.com/feeds/videos.xml?channel_id=UCqFzWxSCi39LnW1JKFR3efg',
+//            'http://atwar.blogs.nytimes.com/feed/',
+//            'http://feeds.soundcloud.com/users/soundcloud:users:209936547/sounds.rss',
+
+            'http://boss.blogs.nytimes.com/feed/',
+            'http://learning.blogs.nytimes.com/feed/'
+
         ]);
 
         $items = $feed->getItems();

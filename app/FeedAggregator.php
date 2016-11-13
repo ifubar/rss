@@ -37,12 +37,13 @@ class FeedAggregator
         return $this->xmlns;
     }
 
-    public function getItems()
+    public function getItems($count = 50)
     {
         $items = $this->items;
         usort($items, function ($x, $y) {
             return strtotime($y['pubDate']) - strtotime($x['pubDate']);
         });
+        $items = array_slice($items, 0, $count);
 
         return $items;
     }
